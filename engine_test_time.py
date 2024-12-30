@@ -166,7 +166,7 @@ def train_on_test(base_model: torch.nn.Module,
                     model.eval()
                     all_pred = []
                     for _ in range(accum_iter):
-                        loss_d, _, _, pred = model(test_samples, test_label, mask_ratio=0, reconstruct=False)
+                        loss_d, _, _, pred,_ = model(test_samples, test_label, mask_ratio=0, reconstruct=False)
                         if args.verbose:
                             cls_loss = loss_d['classification'].item()
                             print(f'datapoint {data_iter_step} iter {step_per_example}: class_loss {cls_loss}')
