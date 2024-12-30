@@ -149,8 +149,8 @@ def train_on_test(base_model: torch.nn.Module,
                 original = samples[0].clone()  
                 patch_size = 16
                 masked_image = apply_mask_to_image(original, mask[0], patch_size)
-                print(pred_patches.shape)
-                reconstructed_img = model.unpatchify(pred_patches[0])                 
+                print(pred_patches[0].unsqueeze(0))
+                reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))                 
                 mask1 = mask[0].clone()
                 mask1[mask == 1] = 0
                 mask1[mask == 0] = 1
