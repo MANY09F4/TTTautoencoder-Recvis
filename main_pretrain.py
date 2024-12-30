@@ -69,7 +69,7 @@ def get_args_parser():
     parser.add_argument('--warmup_epochs', type=int, default=40, metavar='N',
                         help='epochs to warmup LR')
 
-    parser.add_argument('--break_after_epoch', type=int, metavar='N', 
+    parser.add_argument('--break_after_epoch', type=int, metavar='N',
                         help='break training after X epochs, to tune hyperparams and avoid messing with training schedule.')
 
 
@@ -86,7 +86,7 @@ def get_args_parser():
     parser.add_argument('--seed', default=0, type=int)
     parser.add_argument('--resume', default='',
                         help='resume from checkpoint')
-    
+
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='start epoch')
     parser.add_argument('--num_workers', default=10, type=int)
@@ -134,7 +134,7 @@ def main(args):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
     dataset_val = datasets.ImageFolder(os.path.join(args.data_path, 'val'), transform=transform_val)
-    num_classes = 1000
+    num_classes = 200
     print(dataset_train)
     print(dataset_val)
     max_accuracy = 0
@@ -177,10 +177,10 @@ def main(args):
     print("Model = %s" % str(model_without_ddp))
 
     eff_batch_size = args.batch_size * args.accum_iter * misc.get_world_size()
-    
+
     if args.lr is None:  # only base_lr is specified
         args.lr = args.blr * eff_batch_size / 256
-    
+
     wandb_config = vars(args)
     base_lr = (args.lr * 256 / eff_batch_size)
     wandb_config['base_lr'] = base_lr
@@ -202,7 +202,7 @@ def main(args):
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=False)
         model_without_ddp = model.module
-    
+
     # following timm: set wd as 0 for bias and norm layers
     param_groups = optim_factory.add_weight_decay(model_without_ddp, args.weight_decay)
     optimizer = torch.optim.AdamW(param_groups, lr=args.lr, betas=(0.9, 0.95))
@@ -210,7 +210,7 @@ def main(args):
     loss_scaler = NativeScaler()
 
     misc.load_model(args=args, model_without_ddp=model_without_ddp, optimizer=optimizer, loss_scaler=loss_scaler)
-    
+
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
@@ -226,21 +226,21 @@ def main(args):
             misc.save_model(
                 args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer,
                 loss_scaler=loss_scaler, epoch=epoch)
-        
+
         with torch.no_grad():
             test_stats = evaluate(data_loader_val, model, device)
             print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
             max_accuracy = max(max_accuracy, test_stats["acc1"])
             print(f'Max accuracy: {max_accuracy:.2f}%')
 
-        
+
         if misc.is_main_process():
             log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
-                         'epoch': epoch, 
+                         'epoch': epoch,
                          'test_acc1':  test_stats['acc1'],
                          'test_acc5':  test_stats['acc5'],
                          'test_loss':  test_stats['loss']}
-            
+
             if log_writer is not None:
                 log_writer.add_scalar('perf/test_acc1', test_stats['acc1'], epoch)
                 log_writer.add_scalar('perf/test_acc5', test_stats['acc5'], epoch)

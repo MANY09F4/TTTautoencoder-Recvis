@@ -82,20 +82,20 @@ def train_on_test(base_model: torch.nn.Module,
                   device: torch.device,
                   log_writer=None,
                   args=None,
-                  num_classes: int = 1000, 
+                  num_classes: int = 200,
                   iter_start: int = 0):
     if args.model == 'mae_vit_small_patch16':
         classifier_depth = 8
         classifier_embed_dim = 512
         classifier_num_heads = 16
-    else: 
-        assert ('mae_vit_huge_patch14' in args.model or args.model == 'mae_vit_large_patch16') 
+    else:
+        assert ('mae_vit_huge_patch14' in args.model or args.model == 'mae_vit_large_patch16')
         classifier_embed_dim = 768
         classifier_depth = 12
         classifier_num_heads = 12
-    clone_model = models_mae_shared.__dict__[args.model](num_classes=num_classes, head_type=args.head_type, 
-                                                         norm_pix_loss=args.norm_pix_loss, 
-                                                         classifier_depth=classifier_depth, classifier_embed_dim=classifier_embed_dim, 
+    clone_model = models_mae_shared.__dict__[args.model](num_classes=num_classes, head_type=args.head_type,
+                                                         norm_pix_loss=args.norm_pix_loss,
+                                                         classifier_depth=classifier_depth, classifier_embed_dim=classifier_embed_dim,
                                                          classifier_num_heads=classifier_num_heads,
                                                          rotation_prediction=False)
     # Intialize the model for the current run
@@ -106,7 +106,7 @@ def train_on_test(base_model: torch.nn.Module,
     val_loader = iter(torch.utils.data.DataLoader(dataset_val, batch_size=1, shuffle=False, num_workers=args.num_workers))
     accum_iter = args.accum_iter
     metric_logger.add_meter('lr', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    
+
     model, optimizer, loss_scaler = _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, args, device)
     if log_writer is not None:
         print('log_dir: {}'.format(log_writer.log_dir))
@@ -137,10 +137,10 @@ def train_on_test(base_model: torch.nn.Module,
             if (step_per_example + 1) % accum_iter == 0:
                 if args.verbose:
                     print(f'datapoint {data_iter_step} iter {step_per_example}: rec_loss {loss_value}')
-                
+
                 all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
                 optimizer.zero_grad()
-                    
+
             metric_logger.update(**{k:v.item() for k,v in loss_dict.items()})
             lr = optimizer.param_groups[0]["lr"]
             metric_logger.update(lr=lr)
@@ -178,7 +178,7 @@ def train_on_test(base_model: torch.nn.Module,
         return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
     except:
         pass
-    return 
+    return
 
 
 def save_accuracy_results(args):

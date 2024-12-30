@@ -88,7 +88,7 @@ def get_args_parser():
     parser.set_defaults(verbose=False)
     parser.add_argument('--head_type', default='vit_head',
                         help='Head type - linear or vit_head')
-    
+
     parser.add_argument('--single_crop', action='store_true',
                         help='single_crop training')
     parser.add_argument('--no_single_crop', action='store_false', dest='single_crop')
@@ -103,7 +103,7 @@ def get_args_parser():
 
     return parser
 
-def load_combined_model(args, num_classes: int = 1000):
+def load_combined_model(args, num_classes: int = 200):
     if args.model == 'mae_vit_small_patch16':
         classifier_depth = 8
         classifier_embed_dim = 512
@@ -113,13 +113,13 @@ def load_combined_model(args, num_classes: int = 1000):
         classifier_embed_dim = 768
         classifier_depth = 12
         classifier_num_heads = 12
-    model = models_mae_shared.__dict__[args.model](num_classes=num_classes, head_type=args.head_type, norm_pix_loss=args.norm_pix_loss, 
-                                                   classifier_depth=classifier_depth, classifier_embed_dim=classifier_embed_dim, 
+    model = models_mae_shared.__dict__[args.model](num_classes=num_classes, head_type=args.head_type, norm_pix_loss=args.norm_pix_loss,
+                                                   classifier_depth=classifier_depth, classifier_embed_dim=classifier_embed_dim,
                                                    classifier_num_heads=classifier_num_heads,
                                                    rotation_prediction=False)
     model_checkpoint = torch.load(args.resume_model, map_location='cpu')
     head_checkpoint = torch.load(args.resume_finetune, map_location='cpu')
-    
+
     if args.head_type == 'linear':
         model_checkpoint['model']['bn.running_mean'] = head_checkpoint['model']['head.0.running_mean']
         model_checkpoint['model']['bn.running_var'] = head_checkpoint['model']['head.0.running_var']
@@ -155,8 +155,8 @@ def main(args):
     max_known_file = max([int(i.split('results_')[-1].split('.npy')[0]) for i in glob.glob(os.path.join(args.output_dir, 'results_*.npy'))] + [-1])
     if max_known_file != -1:
         print(f'Found {max_known_file} values, continues from next iterations.')
-        
-    # simple augmentation    
+
+    # simple augmentation
     transform_val = transforms.Compose([
             transforms.Resize(256, interpolation=3),
             transforms.CenterCrop(args.input_size),
@@ -174,26 +174,26 @@ def main(args):
             transforms.CenterCrop(args.input_size),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-        
+
     data_path = args.data_path
 
-    dataset_train = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_train, minimizer=None, 
-                                                        batch_size=args.batch_size, steps_per_example=args.steps_per_example * args.accum_iter, 
+    dataset_train = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_train, minimizer=None,
+                                                        batch_size=args.batch_size, steps_per_example=args.steps_per_example * args.accum_iter,
                                                         single_crop=args.single_crop, start_index=max_known_file+1)
 
-    dataset_val = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_val, 
-                                                        batch_size=1, minimizer=None, 
+    dataset_val = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_val,
+                                                        batch_size=1, minimizer=None,
                                                         single_crop=args.single_crop, start_index=max_known_file+1)
 
-    num_classes = 1000
+    num_classes = 200
 
     # define the model
     model, optimizer, scalar = load_combined_model(args, num_classes)
-         
+
     print("Model = %s" % str(model))
 
     eff_batch_size = args.batch_size * args.accum_iter * misc.get_world_size()
-    
+
     args.lr = args.blr * eff_batch_size / 256
 
     wandb_config = vars(args)
@@ -204,7 +204,7 @@ def main(args):
 
     print("accumulate grad iterations: %d" % args.accum_iter)
     print("effective batch size: %d" % eff_batch_size)
-    
+
     start_time = time.time()
     test_stats = train_on_test(
         model, optimizer, scalar, dataset_train, dataset_val,
@@ -214,7 +214,7 @@ def main(args):
         num_classes=num_classes,
         iter_start=max_known_file+1
     )
-    
+
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))

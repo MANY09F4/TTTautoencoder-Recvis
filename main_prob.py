@@ -169,11 +169,11 @@ def main(args):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
     dataset_val = datasets.ImageFolder(os.path.join(args.data_path, 'val'), transform=transform_val)
-    num_classes = 1000
+    num_classes = 200
     print(dataset_train)
     print(dataset_val)
 
-    
+
     mixup_fn = None
     mixup_active = args.mixup > 0 or args.cutmix > 0. or args.cutmix_minmax is not None
     if mixup_fn is not None:
@@ -254,7 +254,7 @@ def main(args):
         print(msg)
 
         # print('Missing keys', set(msg.missing_keys))
-    
+
     # for linear prob only
     # hack: revise model's head with BN
     assert args.head_type == 'vit_head'
@@ -271,7 +271,7 @@ def main(args):
     print('number of params (M): %.2f' % (n_parameters / 1.e6))
 
     eff_batch_size = args.batch_size * args.accum_iter * misc.get_world_size()
-    
+
     if args.lr is None:  # only base_lr is specified
         args.lr = args.blr * eff_batch_size / 256
 
