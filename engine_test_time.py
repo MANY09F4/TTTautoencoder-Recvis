@@ -82,7 +82,7 @@ def train_on_test(base_model: torch.nn.Module,
                   device: torch.device,
                   log_writer=None,
                   args=None,
-                  num_classes: int = 200,
+                  num_classes: int = 1000,
                   iter_start: int = 0):
     if args.model == 'mae_vit_small_patch16':
         classifier_depth = 8
