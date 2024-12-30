@@ -58,7 +58,7 @@ def train_one_epoch(model: torch.nn.Module,
         labels = labels.to(device, non_blocking=True)
 
         with torch.cuda.amp.autocast():
-            loss_dict, _, _, pred = model(samples, target=None, mask_ratio=args.mask_ratio)
+            loss_dict, _, _, pred, _ = model(samples, target=None, mask_ratio=args.mask_ratio)
         
         loss = loss_dict["mae"]
         loss_value = loss.item()
@@ -117,7 +117,7 @@ def evaluate(data_loader, model, device):
 
         # compute output
         with torch.cuda.amp.autocast():
-            loss_dict, _, _, output = model(images, target, mask_ratio=0)
+            loss_dict, _, _, output,_ = model(images, target, mask_ratio=0)
             loss = criterion(output, target)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))

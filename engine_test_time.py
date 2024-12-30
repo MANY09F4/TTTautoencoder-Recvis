@@ -21,6 +21,7 @@ import util.misc as misc
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
 import timm.optim.optim_factory as optim_factory
 import glob
+from utils import display_images, apply_mask_to_image
 
 
 @torch.no_grad()
@@ -74,6 +75,8 @@ def _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, ar
         loss_scaler.load_state_dict(base_scalar.state_dict())
     return clone_model, optimizer, loss_scaler
 
+# def sequential_model(base_model, base_optimizer, )
+
 
 def train_on_test(base_model: torch.nn.Module,
                   base_optimizer,
@@ -125,7 +128,7 @@ def train_on_test(base_model: torch.nn.Module,
             samples, _ = train_data
             targets_rot, samples_rot = None, None
             samples = samples.to(device, non_blocking=True)[0] # index [0] becuase the data is batched to have size 1.
-            loss_dict, _, _, _ = model(samples, None, mask_ratio=mask_ratio)
+            loss_dict, pred_patches, _, _, mask = model(samples, None, mask_ratio=mask_ratio)
             loss = torch.stack([loss_dict[l] for l in loss_dict]).sum()
             loss_value = loss.item()
             loss /= accum_iter
@@ -140,6 +143,18 @@ def train_on_test(base_model: torch.nn.Module,
 
                 all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
                 optimizer.zero_grad()
+            
+            if args.print_images == True :
+                
+                original = samples.clone()  
+                patch_size = 16
+                masked_image = apply_mask_to_image(original, mask, patch_size)
+                reconstructed_img = model.unpatchify(pred_patches)                 
+                mask1 = mask.clone()
+                mask1[mask == 1] = 0
+                mask1[mask == 0] = 1
+                reconstructed_img = apply_mask_to_image(reconstructed_img.squeeze(0), mask1, patch_size)
+                display_images(samples,masked_image,reconstructed_img)
 
             metric_logger.update(**{k:v.item() for k,v in loss_dict.items()})
             lr = optimizer.param_groups[0]["lr"]

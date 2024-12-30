@@ -80,7 +80,7 @@ def main(args):
         samples = samples.to(args.device, non_blocking=True).unsqueeze(0)
         labels = torch.LongTensor([labels]).to(args.device, non_blocking=True)
         with torch.no_grad():
-            loss_dict, _, _, pred = model(samples, target=labels, mask_ratio=0)
+            loss_dict, _, _, pred, _ = model(samples, target=labels, mask_ratio=0)
             acc1 = (stats.mode(pred.argmax(axis=1).detach().cpu().numpy()).mode[0] == labels[0].cpu().detach().numpy()) * 100.
         all_acc.append(acc1)
         all_losses.append(float(loss_dict['classification'].detach().cpu().numpy()))

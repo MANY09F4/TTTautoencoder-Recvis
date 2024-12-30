@@ -55,7 +55,7 @@ def train_one_epoch(model: torch.nn.Module,
             mixed_targets = targets
 
         with torch.cuda.amp.autocast():
-            loss_dict, _, _, output = model(samples, mixed_targets, mask_ratio=0)
+            loss_dict, _, _, output, _ = model(samples, mixed_targets, mask_ratio=0)
             if criterion is not None:
                 loss = criterion(output, mixed_targets)
             else:
@@ -121,7 +121,7 @@ def evaluate(data_loader, model, device):
 
         # compute output
         with torch.cuda.amp.autocast():
-            loss_dict, _, _, output = model(images, target, mask_ratio=0)
+            loss_dict, _, _, output,_ = model(images, target, mask_ratio=0)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
 

@@ -100,6 +100,8 @@ def get_args_parser():
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument('--dist_url', default='env://',
                         help='url used to set up distributed training')
+    parser.add_argument('--print_images', action='store_true')
+    parser.set_defaults(print_images=False)
 
     return parser
 

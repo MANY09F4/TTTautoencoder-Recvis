@@ -319,7 +319,7 @@ class MaskedAutoencoderViT(nn.Module):
             loss['classification'] = criterion
         else:
             head = None
-        return loss, pred, latent[:, 0], head
+        return loss, pred, latent[:, 0], head, mask
 
 
 def mae_vit_small_patch16(**kwargs):
