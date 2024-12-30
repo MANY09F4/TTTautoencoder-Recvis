@@ -103,7 +103,7 @@ def get_args_parser():
 
     return parser
 
-def load_combined_model(args, num_classes: int = 200):
+def load_combined_model(args, num_classes: int = 1000):
     if args.model == 'mae_vit_small_patch16':
         classifier_depth = 8
         classifier_embed_dim = 512
@@ -185,7 +185,7 @@ def main(args):
                                                         batch_size=1, minimizer=None,
                                                         single_crop=args.single_crop, start_index=max_known_file+1)
 
-    num_classes = 200
+    num_classes = 1000
 
     # define the model
     model, optimizer, scalar = load_combined_model(args, num_classes)

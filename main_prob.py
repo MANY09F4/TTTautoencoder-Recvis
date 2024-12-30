@@ -169,7 +169,7 @@ def main(args):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
     dataset_val = datasets.ImageFolder(os.path.join(args.data_path, 'val'), transform=transform_val)
-    num_classes = 200
+    num_classes = 1000
     print(dataset_train)
     print(dataset_val)
 

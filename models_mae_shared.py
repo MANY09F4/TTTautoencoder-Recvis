@@ -26,7 +26,7 @@ class MaskedAutoencoderViT(nn.Module):
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
                  classifier_embed_dim=768, classifier_depth=12, classifier_num_heads=12,
-                 mlp_ratio=4., norm_layer=nn.LayerNorm, num_classes: int = 200, head_type: str = 'linear',
+                 mlp_ratio=4., norm_layer=nn.LayerNorm, num_classes: int = 1000, head_type: str = 'linear',
                  no_decoder: bool = False, norm_pix_loss=False, drop_path_rate=0., rotation_prediction: bool = False):
         super().__init__()
 
