@@ -144,18 +144,18 @@ def train_on_test(base_model: torch.nn.Module,
                 all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
                 optimizer.zero_grad()
             
-            if args.print_images == True :
+            # if args.print_images == True :
 
-                original = samples[0].clone()  
-                patch_size = 16
-                masked_image = apply_mask_to_image(original, mask[0], patch_size)
-                print(pred_patches[0].unsqueeze(0).shape)
-                reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))                 
-                mask1 = mask[0].clone()
-                mask1[mask[0] == 1] = 0
-                mask1[mask[0] == 0] = 1
-                reconstructed_img = apply_mask_to_image(reconstructed_img.squeeze(0), mask1, patch_size)
-                display_images(samples[0],masked_image,reconstructed_img)
+            #     original = samples[0].clone()  
+            #     patch_size = 16
+            #     masked_image = apply_mask_to_image(original, mask[0], patch_size)
+            #     print(pred_patches[0].unsqueeze(0).shape)
+            #     reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))                 
+            #     mask1 = mask[0].clone()
+            #     mask1[mask[0] == 1] = 0
+            #     mask1[mask[0] == 0] = 1
+            #     reconstructed_img = apply_mask_to_image(reconstructed_img.squeeze(0), mask1, patch_size)
+            #     display_images(samples[0],masked_image,reconstructed_img)
 
             metric_logger.update(**{k:v.item() for k,v in loss_dict.items()})
             lr = optimizer.param_groups[0]["lr"]
