@@ -154,7 +154,7 @@ def train_on_test(base_model: torch.nn.Module,
                 mask1 = mask[0].clone()
                 mask1[mask[0] == 1] = 0
                 mask1[mask[0] == 0] = 1
-                reconstructed_img = apply_mask_to_image(reconstructed_img, mask1, patch_size)
+                reconstructed_img = apply_mask_to_image(reconstructed_img.squeeze(0), mask1, patch_size)
                 display_images(samples,masked_image,reconstructed_img)
 
             metric_logger.update(**{k:v.item() for k,v in loss_dict.items()})
