@@ -145,7 +145,7 @@ def train_on_test(base_model: torch.nn.Module,
                 optimizer.zero_grad()
             
             if args.print_images == True :
-                
+
                 original = samples.clone()  
                 patch_size = 16
                 masked_image = apply_mask_to_image(original, mask, patch_size)
@@ -153,7 +153,8 @@ def train_on_test(base_model: torch.nn.Module,
                 mask1 = mask.clone()
                 mask1[mask == 1] = 0
                 mask1[mask == 0] = 1
-                reconstructed_img = apply_mask_to_image(reconstructed_img.squeeze(0), mask1, patch_size)
+                print(reconstructed_img.shape)
+                reconstructed_img = apply_mask_to_image(reconstructed_img, mask1, patch_size)
                 display_images(samples,masked_image,reconstructed_img)
 
             metric_logger.update(**{k:v.item() for k,v in loss_dict.items()})
