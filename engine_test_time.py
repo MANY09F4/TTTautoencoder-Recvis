@@ -160,7 +160,7 @@ def train_on_test(base_model: torch.nn.Module,
                 masked_image = masked_image.squeeze().detach().cpu()
                 reconstructed_img = reconstructed_img.squeeze().detach().cpu()
 
-                display_images(samples[0],masked_image,reconstructed_img)
+                display_images(original,masked_image,reconstructed_img)
 
             metric_logger.update(**{k:v.item() for k,v in loss_dict.items()})
             lr = optimizer.param_groups[0]["lr"]
