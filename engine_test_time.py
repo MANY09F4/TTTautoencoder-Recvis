@@ -75,7 +75,8 @@ def _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, ar
         loss_scaler.load_state_dict(base_scalar.state_dict())
     return clone_model, optimizer, loss_scaler
 
-# def sequential_model(base_model, base_optimizer, )
+# def sequential_model(base_model, base_optimizer, base_scalar, clone_model, args, device):
+
 
 
 def train_on_test(base_model: torch.nn.Module,
@@ -114,6 +115,12 @@ def train_on_test(base_model: torch.nn.Module,
     if log_writer is not None:
         print('log_dir: {}'.format(log_writer.log_dir))
     dataset_len = len(dataset_val)
+
+    if args.print_images :
+        s = (args.steps_per_example * accum_iter - 1) / (args.num_print_images - 1)
+        indices_to_show = {int(round(i * s)) for i in range(args.num_print_images - 1)}
+        indices_to_show.add(args.steps_per_example * accum_iter - 1)  
+
     for data_iter_step in range(iter_start, dataset_len):
 
         rec_losses = []
@@ -128,6 +135,7 @@ def train_on_test(base_model: torch.nn.Module,
         pseudo_labels = None
 
         # Test time training:
+    
         for step_per_example in range(args.steps_per_example * accum_iter):
             train_data = next(train_loader)
             # Train data are 2 values [image, class]
@@ -172,34 +180,36 @@ def train_on_test(base_model: torch.nn.Module,
                         metric_logger.update(loss=loss_value)
                     all_results[step_per_example // accum_iter].append(acc1)
                     model.train()
+            
+            if (args.print_images) :
 
-            if (args.print_images == True and (step_per_example % 10 == 0 or step_per_example == args.steps_per_example * accum_iter - 1)) :
+                if (step_per_example in indices_to_show) : 
 
-                reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))                 
-                mask1 = mask[0].clone()
-                mask1[mask[0] == 1] = 0
-                mask1[mask[0] == 0] = 1
-                reconstructed_img = apply_mask_to_image(reconstructed_img.squeeze(0), mask1, patch_size=16)
+                    reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))                 
+                    mask1 = mask[0].clone()
+                    mask1[mask[0] == 1] = 0
+                    mask1[mask[0] == 0] = 1
+                    reconstructed_img = apply_mask_to_image(reconstructed_img.squeeze(0), mask1, patch_size=16)
 
-                reconstructed_imgs.append(reconstructed_img)
-                class_losses.append(cls_loss)
-                rec_losses.append(loss_value)
-                steps.append(step_per_example)
-                
-                if step_per_example == args.steps_per_example * accum_iter - 1 : 
+                    reconstructed_imgs.append(reconstructed_img)
+                    class_losses.append(cls_loss)
+                    rec_losses.append(loss_value)
+                    steps.append(step_per_example)
+                    
+                    if step_per_example == args.steps_per_example * accum_iter - 1 : 
 
-                    original = samples[0].clone()  
-                    patch_size = 16
-                    masked_image = apply_mask_to_image(original, mask[0], patch_size)
+                        original = samples[0].clone()  
+                        patch_size = 16
+                        masked_image = apply_mask_to_image(original, mask[0], patch_size)
 
-                    original = samples[0].squeeze().detach().cpu()
-                    masked_image = masked_image.squeeze().detach().cpu()
-                    reconstructed_img = reconstructed_img.squeeze().detach().cpu()
+                        original = samples[0].squeeze().detach().cpu()
+                        masked_image = masked_image.squeeze().detach().cpu()
+                        reconstructed_img = reconstructed_img.squeeze().detach().cpu()
 
-                    save_dir = '/home/toniomirri/Images_evolution'
-                    file_name = f'image_{data_iter_step}.png'
+                        save_dir = '/home/toniomirri/Images_evolution'
+                        file_name = f'image_{data_iter_step}.png'
 
-                    display_images(original,masked_image,reconstructed_imgs,save_dir,file_name,rec_losses,class_losses,steps)
+                        display_images(original,masked_image,reconstructed_imgs,save_dir,file_name,rec_losses,class_losses,steps)
 
         if data_iter_step % 50 == 1:
             print('step: {}, acc {} rec-loss {}'.format(data_iter_step, np.mean(all_results[-1]), loss_value))

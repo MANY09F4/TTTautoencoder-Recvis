@@ -102,6 +102,7 @@ def get_args_parser():
                         help='url used to set up distributed training')
     parser.add_argument('--print_images', action='store_true')
     parser.set_defaults(print_images=False)
+    parser.add_argument('--num_print_images', default=5, type=int)
 
     return parser
 
