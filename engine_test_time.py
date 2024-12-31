@@ -144,7 +144,7 @@ def train_on_test(base_model: torch.nn.Module,
                 all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
                 optimizer.zero_grad()
             
-            if args.print_images == True :
+            if (args.print_images == True and step_per_example % 10 == 0):
 
                 original = samples[0].clone()  
                 patch_size = 16
@@ -160,7 +160,10 @@ def train_on_test(base_model: torch.nn.Module,
                 masked_image = masked_image.squeeze().detach().cpu()
                 reconstructed_img = reconstructed_img.squeeze().detach().cpu()
 
-                display_images(original,masked_image,reconstructed_img)
+                save_dir = '/home/toniomirri/Images_evolution'
+                file_name = f'image_{data_iter_step}_{step_per_example}.png'
+
+                display_images(original,masked_image,reconstructed_img,save_dir,file_name)
 
             metric_logger.update(**{k:v.item() for k,v in loss_dict.items()})
             lr = optimizer.param_groups[0]["lr"]

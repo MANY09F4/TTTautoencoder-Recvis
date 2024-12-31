@@ -1,7 +1,11 @@
 #Utils 
 import matplotlib.pyplot as plt
+import os
 
-def display_images(original, masked, reconstructed):
+def display_images(original, masked, reconstructed,save_dir,file_name):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
     fig, axs = plt.subplots(1, 3, figsize=(15, 5))
     axs[0].imshow(original.permute(1, 2, 0))
     axs[0].set_title('Image Originale')
@@ -17,7 +21,8 @@ def display_images(original, masked, reconstructed):
     axs[2].set_title('Image Reconstruite')
     axs[2].axis('off')
 
-    plt.show()
+    plt.savefig(os.path.join(save_dir, file_name))
+    plt.close(fig)
 
 
 def apply_mask_to_image(image, mask, patch_size):
