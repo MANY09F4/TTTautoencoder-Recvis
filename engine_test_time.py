@@ -115,11 +115,18 @@ def train_on_test(base_model: torch.nn.Module,
         print('log_dir: {}'.format(log_writer.log_dir))
     dataset_len = len(dataset_val)
     for data_iter_step in range(iter_start, dataset_len):
+
+        rec_losses = []
+        class_losses = []
+        reconstructed_imgs = []
+        steps = []
+
         val_data = next(val_loader)
         (test_samples, test_label) = val_data
         test_samples = test_samples.to(device, non_blocking=True)[0]
         test_label = test_label.to(device, non_blocking=True)
         pseudo_labels = None
+
         # Test time training:
         for step_per_example in range(args.steps_per_example * accum_iter):
             train_data = next(train_loader)
@@ -143,27 +150,7 @@ def train_on_test(base_model: torch.nn.Module,
 
                 all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
                 optimizer.zero_grad()
-            
-            if (args.print_images == True and step_per_example % 10 == 0):
-
-                original = samples[0].clone()  
-                patch_size = 16
-                masked_image = apply_mask_to_image(original, mask[0], patch_size)
-                print(pred_patches[0].unsqueeze(0).shape)
-                reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))                 
-                mask1 = mask[0].clone()
-                mask1[mask[0] == 1] = 0
-                mask1[mask[0] == 0] = 1
-                reconstructed_img = apply_mask_to_image(reconstructed_img.squeeze(0), mask1, patch_size)
-
-                original = samples[0].squeeze().detach().cpu()
-                masked_image = masked_image.squeeze().detach().cpu()
-                reconstructed_img = reconstructed_img.squeeze().detach().cpu()
-
-                save_dir = '/home/toniomirri/Images_evolution'
-                file_name = f'image_{data_iter_step}_{step_per_example}.png'
-
-                display_images(original,masked_image,reconstructed_img,save_dir,file_name)
+    
 
             metric_logger.update(**{k:v.item() for k,v in loss_dict.items()})
             lr = optimizer.param_groups[0]["lr"]
@@ -185,6 +172,35 @@ def train_on_test(base_model: torch.nn.Module,
                         metric_logger.update(loss=loss_value)
                     all_results[step_per_example // accum_iter].append(acc1)
                     model.train()
+
+            if (args.print_images == True and step_per_example % 10 == 0):
+
+                reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))                 
+                mask1 = mask[0].clone()
+                mask1[mask[0] == 1] = 0
+                mask1[mask[0] == 0] = 1
+                reconstructed_img = apply_mask_to_image(reconstructed_img.squeeze(0), mask1, patch_size=16)
+
+                reconstructed_imgs.append(reconstructed_img)
+                class_losses.append(cls_loss)
+                rec_losses.append(loss_value)
+                steps.append(step_per_example)
+                
+                if step_per_example == args.steps_per_example * accum_iter - 1 : 
+
+                    original = samples[0].clone()  
+                    patch_size = 16
+                    masked_image = apply_mask_to_image(original, mask[0], patch_size)
+
+                    original = samples[0].squeeze().detach().cpu()
+                    masked_image = masked_image.squeeze().detach().cpu()
+                    reconstructed_img = reconstructed_img.squeeze().detach().cpu()
+
+                    save_dir = '/home/toniomirri/Images_evolution'
+                    file_name = f'image_{data_iter_step}.png'
+
+                    display_images(original,masked_image,reconstructed_imgs,save_dir,file_name,rec_losses,class_losses,steps)
+
         if data_iter_step % 50 == 1:
             print('step: {}, acc {} rec-loss {}'.format(data_iter_step, np.mean(all_results[-1]), loss_value))
         if data_iter_step % 500 == 499 or (data_iter_step == dataset_len - 1):
