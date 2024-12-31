@@ -173,7 +173,7 @@ def train_on_test(base_model: torch.nn.Module,
                     all_results[step_per_example // accum_iter].append(acc1)
                     model.train()
 
-            if (args.print_images == True and step_per_example % 10 == 0):
+            if (args.print_images == True and (step_per_example % 10 == 0 or step_per_example == args.steps_per_example * accum_iter - 1)) :
 
                 reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))                 
                 mask1 = mask[0].clone()
