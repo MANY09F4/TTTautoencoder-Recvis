@@ -51,6 +51,6 @@ def create_imagenet_c_subset(base_dir, output_dir, num_images_per_class=10):
 if __name__ == "__main__":
     base_dir = "/home/toniomirri/datasets/Imagenet-C"  # Path to the original ImageNet-C dataset
     output_dir = "/home/toniomirri/datasets/Imagenet-C-Reduced-50"  # Path to save the reduced dataset
-    num_images_per_class = 50  # Number of images per class
+    num_images_per_class = 5  # Number of images per class
 
     create_imagenet_c_subset(base_dir, output_dir, num_images_per_class)
