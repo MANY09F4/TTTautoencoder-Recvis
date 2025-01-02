@@ -132,7 +132,7 @@ def train_on_test(base_model: torch.nn.Module,
     if args.print_images :
         s = (args.steps_per_example * accum_iter - 1) / (args.num_print_images - 1)
         indices_to_show = {int(round(i * s)) for i in range(args.num_print_images - 1)}
-        indices_to_show.add(args.steps_per_example * accum_iter - 1)  
+        indices_to_show.add(args.steps_per_example * accum_iter - 1)
 
     for data_iter_step in range(iter_start, dataset_len):
 
@@ -171,7 +171,7 @@ def train_on_test(base_model: torch.nn.Module,
 
                 all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
                 optimizer.zero_grad()
-    
+
 
             metric_logger.update(**{k:v.item() for k,v in loss_dict.items()})
             lr = optimizer.param_groups[0]["lr"]
@@ -193,12 +193,12 @@ def train_on_test(base_model: torch.nn.Module,
                         metric_logger.update(loss=loss_value)
                     all_results[step_per_example // accum_iter].append(acc1)
                     model.train()
-            
+
             if (args.print_images) :
 
-                if (step_per_example in indices_to_show) : 
+                if (step_per_example in indices_to_show) :
 
-                    reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))                 
+                    reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))
                     mask1 = mask[0].clone()
                     mask1[mask[0] == 1] = 0
                     mask1[mask[0] == 0] = 1
@@ -208,10 +208,10 @@ def train_on_test(base_model: torch.nn.Module,
                     class_losses.append(cls_loss)
                     rec_losses.append(loss_value)
                     steps.append(step_per_example)
-                    
-                    if step_per_example == args.steps_per_example * accum_iter - 1 : 
 
-                        original = samples[0].clone()  
+                    if step_per_example == args.steps_per_example * accum_iter - 1 :
+
+                        original = samples[0].clone()
                         patch_size = 16
                         masked_image = apply_mask_to_image(original, mask[0], patch_size)
 
@@ -268,7 +268,7 @@ def train_on_test_online(base_model: torch.nn.Module,
                                                          classifier_depth=classifier_depth, classifier_embed_dim=classifier_embed_dim,
                                                          classifier_num_heads=classifier_num_heads,
                                                          rotation_prediction=False)
-    
+
     # Intialize the model for the current run
     all_results =  [list() for i in range (args.steps_first_example)] + [list() for i in range(args.steps_per_example)]
     all_losses =  [list() for i in range (args.steps_first_example)] + [list() for i in range(args.steps_per_example)]
@@ -289,7 +289,7 @@ def train_on_test_online(base_model: torch.nn.Module,
     if args.print_images :
         s = (args.steps_per_example * accum_iter - 1) / (args.num_print_images - 1)
         indices_to_show = {int(round(i * s)) for i in range(args.num_print_images - 1)}
-        indices_to_show.add(args.steps_per_example * accum_iter - 1)  
+        indices_to_show.add(args.steps_per_example * accum_iter - 1)
 
     for data_iter_step in range(iter_start, dataset_len):
 
@@ -304,14 +304,14 @@ def train_on_test_online(base_model: torch.nn.Module,
         test_label = test_label.to(device, non_blocking=True)
         pseudo_labels = None
 
-        if args.online_ttt : 
-            if data_iter_step == iter_start : 
+        if args.online_ttt :
+            if data_iter_step == iter_start :
                 num_steps_per_example = args.steps_first_example
-            else : 
+            else :
                 num_steps_per_example = args.steps_per_example
 
         # Test time training:
-    
+
         for step_per_example in range(num_steps_per_example):
             train_data = next(train_loader)
             # Train data are 2 values [image, class]
@@ -334,7 +334,7 @@ def train_on_test_online(base_model: torch.nn.Module,
 
                 all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
                 optimizer.zero_grad()
-    
+
 
             metric_logger.update(**{k:v.item() for k,v in loss_dict.items()})
             lr = optimizer.param_groups[0]["lr"]
@@ -356,12 +356,12 @@ def train_on_test_online(base_model: torch.nn.Module,
                         metric_logger.update(loss=loss_value)
                     all_results[step_per_example // accum_iter].append(acc1)
                     model.train()
-            
+
             if (args.print_images) and data_iter_step == iter_start :
 
-                if (step_per_example in indices_to_show) : 
+                if (step_per_example in indices_to_show) :
 
-                    reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))                 
+                    reconstructed_img = model.unpatchify(pred_patches[0].unsqueeze(0))
                     mask1 = mask[0].clone()
                     mask1[mask[0] == 1] = 0
                     mask1[mask[0] == 0] = 1
@@ -371,10 +371,10 @@ def train_on_test_online(base_model: torch.nn.Module,
                     class_losses.append(cls_loss)
                     rec_losses.append(loss_value)
                     steps.append(step_per_example)
-                    
-                    if step_per_example == args.steps_per_example * accum_iter - 1 : 
 
-                        original = samples[0].clone()  
+                    if step_per_example == args.steps_per_example * accum_iter - 1 :
+
+                        original = samples[0].clone()
                         patch_size = 16
                         masked_image = apply_mask_to_image(original, mask[0], patch_size)
 
@@ -411,8 +411,8 @@ def train_on_test_online(base_model: torch.nn.Module,
 
 
 def save_accuracy_results(args):
-    # if args.online_ttt : 
-    #     num_steps_per_examples = args.steps_first_example + 
+    # if args.online_ttt :
+    #     num_steps_per_examples = args.steps_first_example +
     all_all_results = [list() for i in range(args.steps_per_example)]
     for file_number, f_name in enumerate(glob.glob(os.path.join(args.output_dir, 'results_*.npy'))):
         all_data = np.load(f_name)
@@ -423,10 +423,5 @@ def save_accuracy_results(args):
     with open(os.path.join(args.output_dir, 'accuracy.txt'), 'a') as f:
         f.write(f'{str(args)}\n')
         for i in range(args.steps_per_example):
-            assert len(all_all_results[i]) == 50000, len(all_all_results[i])
+            assert len(all_all_results[i]) == 5000, len(all_all_results[i])
             f.write(f'{i}\t{np.mean(all_all_results[i])}\n')
-
-
-
-
-
