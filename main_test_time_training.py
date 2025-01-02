@@ -27,7 +27,7 @@ from torchvision import datasets
 import glob
 import util.misc as misc
 import models_mae_shared
-from engine_test_time import train_on_test, get_prameters_from_args
+from engine_test_time import train_on_test, get_prameters_from_args, train_on_test_online
 from data import tt_image_folder
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
 
@@ -47,7 +47,7 @@ def get_args_parser():
     # Test time training
     parser.add_argument('--mask_ratio', default=0.75, type=float,
                         help='Masking ratio (percentage of removed patches).')
-    parser.add_argument('--steps_per_example', default=1, type=int,)
+    parser.add_argument('--steps_per_example', default=1, type=int,help='If online version: the number of steps for every examples after the frist one.')
     parser.add_argument('--stored_latents', default='', help='have we generated the latents already?')
     # Optimizer parameters
     parser.add_argument('--weight_decay', type=float, default=0.05,
@@ -103,6 +103,11 @@ def get_args_parser():
     parser.add_argument('--print_images', action='store_true')
     parser.set_defaults(print_images=False)
     parser.add_argument('--num_print_images', default=5, type=int)
+    parser.add_argument('--online_ttt', action='store_true',help='Run the online version.')
+    parser.set_defaults(online_ttt=False)
+    parser.add_argument('--steps_first_example', default=250, type=int, help='The number of steps for the first examples of the online version.')
+    parser.add_argument('--number_of_example_reinitialize', default=-1, type=int, help='The number of example that you want to treat as a single cluster for the online version. If -1 you dont reinitialize the model.')
+
 
     return parser
 
@@ -158,6 +163,9 @@ def main(args):
     max_known_file = max([int(i.split('results_')[-1].split('.npy')[0]) for i in glob.glob(os.path.join(args.output_dir, 'results_*.npy'))] + [-1])
     if max_known_file != -1:
         print(f'Found {max_known_file} values, continues from next iterations.')
+    
+    if args.online_ttt : 
+        print("Running the online version of TTT.")
 
     # simple augmentation
     transform_val = transforms.Compose([
@@ -209,14 +217,24 @@ def main(args):
     print("effective batch size: %d" % eff_batch_size)
 
     start_time = time.time()
-    test_stats = train_on_test(
-        model, optimizer, scalar, dataset_train, dataset_val,
-        device,
-        log_writer=None,
-        args=args,
-        num_classes=num_classes,
-        iter_start=max_known_file+1
-    )
+    if args.online_ttt : 
+        test_stats = train_on_test_online(
+            model, optimizer, scalar, dataset_train, dataset_val,
+            device,
+            log_writer=None,
+            args=args,
+            num_classes=num_classes,
+            iter_start=max_known_file+1
+        )
+    else:
+        test_stats = train_on_test(
+            model, optimizer, scalar, dataset_train, dataset_val,
+            device,
+            log_writer=None,
+            args=args,
+            num_classes=num_classes,
+            iter_start=max_known_file+1
+        )
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
