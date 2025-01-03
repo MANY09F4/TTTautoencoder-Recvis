@@ -282,6 +282,10 @@ def train_on_test_online(base_model: torch.nn.Module,
 
 
     model, optimizer, loss_scaler = _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, args, device)
+    if args.reinitialize_first_last_one : 
+        state_dict_model_previous = model.state_dict()
+        state_dict_optimizer_previous = optimizer.state_dict()
+
     if log_writer is not None:
         print('log_dir: {}'.format(log_writer.log_dir))
     dataset_len = len(dataset_val)
@@ -309,6 +313,19 @@ def train_on_test_online(base_model: torch.nn.Module,
                 num_steps_per_example = args.steps_first_example
             else :
                 num_steps_per_example = args.steps_per_example
+
+        #Reinitialize the model to the first step of the last example
+        if args.reinitialize_first_last_one : 
+            model = clone_model.load_state_dict(copy.deepcopy(state_dict_model_previous))
+            if args.optimizer_type == 'sgd':
+                optimizer = torch.optim.SGD(get_prameters_from_args(clone_model, args), lr=args.lr, momentum=args.optimizer_momentum)
+            elif args.optimizer_type == 'adam':
+                optimizer = torch.optim.Adam(get_prameters_from_args(clone_model, args), lr=args.lr, betas=(0.9, 0.95))
+            else:
+                assert args.optimizer_type == 'adam_w'
+                optimizer = torch.optim.AdamW(get_prameters_from_args(clone_model, args), lr=args.lr, betas=(0.9, 0.95))
+            optimizer.load_state_dict(state_dict_optimizer_previous)
+            optimizer.zero_grad()
 
         # Test time training:
 
@@ -362,6 +379,10 @@ def train_on_test_online(base_model: torch.nn.Module,
                         all_results[step_per_example // accum_iter].append(acc1)
                     model.train()
 
+            if args.reinitialize_first_last_one and step_per_example == 0 :
+                state_dict_model_previous = model.state_dict() 
+                state_dict_optimizer_previous = optimizer.state_dict()
+
             if (args.print_images) and data_iter_step == iter_start :
 
                 if (step_per_example in indices_to_show) :
@@ -402,8 +423,8 @@ def train_on_test_online(base_model: torch.nn.Module,
             all_results = [list() for i in range(args.steps_per_example)]
             all_losses = [list() for i in range(args.steps_per_example)]
 
-        if data_iter_step == args.number_of_example_reinitialize :
-            model, optimizer, loss_scaler = _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, args, device)
+        # if data_iter_step % args.number_of_example_reinitialize == 0 :
+        #     model, optimizer, loss_scaler = _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, args, device)
 
     save_accuracy_results(args)
     # gather the stats from all processes

@@ -107,6 +107,8 @@ def get_args_parser():
     parser.set_defaults(online_ttt=False)
     parser.add_argument('--steps_first_example', default=250, type=int, help='The number of steps for the first examples of the online version.')
     parser.add_argument('--number_of_example_reinitialize', default=-1, type=int, help='The number of example that you want to treat as a single cluster for the online version. If -1 you dont reinitialize the model.')
+    parser.add_argument('--reinitialize_first_last_one', action='store_true',help='Run the online version with reintialization of the models weights to the first step of the last example.')
+    parser.set_defaults(reinitialize_first_last_one=False)
 
 
     return parser
