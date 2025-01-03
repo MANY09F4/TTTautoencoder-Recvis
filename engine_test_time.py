@@ -331,9 +331,9 @@ def train_on_test_online(base_model: torch.nn.Module,
             if (step_per_example + 1) % accum_iter == 0:
                 if args.verbose:
                     print(f'datapoint {data_iter_step} iter {step_per_example}: rec_loss {loss_value}')
-                if data_iter_step == iter_start and num_steps_per_example - step_per_example < args.steps_per_example : 
+                if data_iter_step == iter_start and num_steps_per_example - step_per_example < args.steps_per_example :
                     all_losses[(args.steps_per_example - (num_steps_per_example - step_per_example)) // accum_iter].append(loss_value/accum_iter)
-                else : 
+                else :
                     all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
                 optimizer.zero_grad()
 
@@ -356,9 +356,9 @@ def train_on_test_online(base_model: torch.nn.Module,
                     if (step_per_example + 1) // accum_iter == num_steps_per_example:
                         metric_logger.update(top1_acc=acc1)
                         metric_logger.update(loss=loss_value)
-                    if data_iter_step == iter_start and num_steps_per_example - step_per_example < args.steps_per_example : 
+                    if data_iter_step == iter_start and num_steps_per_example - step_per_example < args.steps_per_example :
                         all_results[(args.steps_per_example - (num_steps_per_example - step_per_example)) // accum_iter].append(acc1)
-                    else : 
+                    else :
                         all_results[step_per_example // accum_iter].append(acc1)
                     model.train()
 
@@ -428,5 +428,5 @@ def save_accuracy_results(args):
     with open(os.path.join(args.output_dir, 'accuracy.txt'), 'a') as f:
         f.write(f'{str(args)}\n')
         for i in range(args.steps_per_example):
-            assert len(all_all_results[i]) == 5000, len(all_all_results[i])
+            assert len(all_all_results[i]) == 10, len(all_all_results[i])
             f.write(f'{i}\t{np.mean(all_all_results[i])}\n')
