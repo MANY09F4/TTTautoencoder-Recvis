@@ -86,6 +86,50 @@ class ExtendedImageFolder_online(ImageFolderSafe):
             target = self.target_transform(target)
 
         return samples, target
+    
+# class ExtendedImageFolder_online(datasets.ImageFolder):
+#     def __init__(self, root: str, batch_size: int = 1, initial_steps: int = 250, subsequent_steps: int = 1, transform: Optional[Callable] = None, single_crop: bool = False, start_index: int = 0):
+#         super().__init__(root=root, transform=transform)
+#         self.batch_size = batch_size
+#         self.initial_steps = initial_steps
+#         self.subsequent_steps = subsequent_steps
+#         self.single_crop = single_crop
+#         self.start_index = start_index
+
+#         # Création de l'ordre mélangé des indices
+#         self.indices = np.arange(len(self.samples))
+#         np.random.shuffle(self.indices)
+
+#         # Assigner le nombre de pas par exemple
+#         self.steps_per_example = [self.initial_steps] + [self.subsequent_steps] * (len(self.samples) - 1)
+
+#     def __len__(self):
+#         # Calculer la longueur totale en tenant compte du nombre de pas par exemple
+#         total_steps = np.sum(np.array(self.steps_per_example)[self.indices])  # Utilisation des indices mélangés
+#         return total_steps * self.batch_size
+
+#     def __getitem__(self, index: int) -> Tuple[Any, Any]:
+#         # Déterminer l'index de l'image réelle basé sur la somme cumulative des pas
+#         cumulative_steps = 0
+#         real_index = 0
+#         for i, steps in enumerate(self.steps_per_example):
+#             cumulative_steps += steps
+#             if index < cumulative_steps:
+#                 real_index = i
+#                 break
+
+#         # Utiliser l'indice mélangé pour obtenir le vrai index
+#         shuffled_real_index = self.indices[real_index]
+
+#         path, target = self.samples[shuffled_real_index]
+#         sample = self.loader(path)
+#         if self.transform is not None and not self.single_crop:
+#             samples = torch.stack([self.transform(sample) for _ in range(self.batch_size)], axis=0)
+#         elif self.transform and self.single_crop:
+#             s = self.transform(sample)
+#             samples = torch.stack([s for _ in range(self.batch_size)], axis=0)
+
+#         return samples, target
 
 class ExtendedSplitImageFolder(ExtendedImageFolder):
     def __init__(self, root: str, batch_size: int = 1, steps_per_example: int = 1, split: int = 0, minimizer = None, 
