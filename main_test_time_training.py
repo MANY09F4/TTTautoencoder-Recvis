@@ -167,8 +167,8 @@ def main(args):
     max_known_file = max([int(i.split('results_')[-1].split('.npy')[0]) for i in glob.glob(os.path.join(args.output_dir, 'results_*.npy'))] + [-1])
     if max_known_file != -1:
         print(f'Found {max_known_file} values, continues from next iterations.')
-    
-    if args.online_ttt : 
+
+    if args.online_ttt :
         print("Running the online version of TTT.")
 
     # simple augmentation
@@ -192,16 +192,16 @@ def main(args):
 
     data_path = args.data_path
 
-    if args.online_ttt : 
+    if args.online_ttt :
         if args.shuffle :
-            dataset_train = tt_image_folder.ExtendedImageFolder_online_shuffle(data_path, transform=transform_train, minimizer=None,
+            dataset_train = tt_image_folder.ExtendedImageFolder_online_shuffle(data_path, transform=transform_train,
                                                         batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,
                                                         single_crop=args.single_crop, start_index=max_known_file+1)
-        else : 
+        else :
             dataset_train = tt_image_folder.ExtendedImageFolder_online(data_path, transform=transform_train, minimizer=None,
                                                         batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,
                                                         single_crop=args.single_crop, start_index=max_known_file+1)
-    else : 
+    else :
         dataset_train = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_train, minimizer=None,
                                                         batch_size=args.batch_size, steps_per_example=args.steps_per_example * args.accum_iter,
                                                         single_crop=args.single_crop, start_index=max_known_file+1)
@@ -231,7 +231,7 @@ def main(args):
     print("effective batch size: %d" % eff_batch_size)
 
     start_time = time.time()
-    if args.online_ttt : 
+    if args.online_ttt :
         test_stats = train_on_test_online(
             model, optimizer, scalar, dataset_train, dataset_val,
             device,
