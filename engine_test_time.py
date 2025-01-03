@@ -270,8 +270,8 @@ def train_on_test_online(base_model: torch.nn.Module,
                                                          rotation_prediction=False)
 
     # Intialize the model for the current run
-    all_results =  [list() for i in range (args.steps_first_example)] + [list() for i in range(args.steps_per_example)]
-    all_losses =  [list() for i in range (args.steps_first_example)] + [list() for i in range(args.steps_per_example)]
+    all_results = [list() for i in range(args.steps_per_example)]
+    all_losses =  [list() for i in range(args.steps_per_example)]
     metric_logger = misc.MetricLogger(delimiter="  ")
     train_loader = iter(torch.utils.data.DataLoader(dataset_train, batch_size=1, shuffle=False, num_workers=args.num_workers))
     val_loader = iter(torch.utils.data.DataLoader(dataset_val, batch_size=1, shuffle=False, num_workers=args.num_workers))
@@ -331,8 +331,10 @@ def train_on_test_online(base_model: torch.nn.Module,
             if (step_per_example + 1) % accum_iter == 0:
                 if args.verbose:
                     print(f'datapoint {data_iter_step} iter {step_per_example}: rec_loss {loss_value}')
-
-                all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
+                if data_iter_step == iter_start and num_steps_per_example - step_per_example < args.steps_per_example : 
+                    all_losses[(args.steps_per_example - (num_steps_per_example - step_per_example)) // accum_iter].append(loss_value/accum_iter)
+                else : 
+                    all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
                 optimizer.zero_grad()
 
 
@@ -354,7 +356,10 @@ def train_on_test_online(base_model: torch.nn.Module,
                     if (step_per_example + 1) // accum_iter == num_steps_per_example:
                         metric_logger.update(top1_acc=acc1)
                         metric_logger.update(loss=loss_value)
-                    all_results[step_per_example // accum_iter].append(acc1)
+                    if data_iter_step == iter_start and num_steps_per_example - step_per_example < args.steps_per_example : 
+                        all_results[(args.steps_per_example - (num_steps_per_example - step_per_example)) // accum_iter].append(acc1)
+                    else : 
+                        all_results[step_per_example // accum_iter].append(acc1)
                     model.train()
 
             if (args.print_images) and data_iter_step == iter_start :
@@ -394,8 +399,8 @@ def train_on_test_online(base_model: torch.nn.Module,
                 np.save(f, np.array(all_results))
             with open(os.path.join(args.output_dir, f'losses_{data_iter_step}.npy'), 'wb') as f:
                 np.save(f, np.array(all_losses))
-            all_results =  [list() for i in range (args.steps_first_example)] + [list() for i in range(args.steps_per_example)]
-            all_losses =  [list() for i in range (args.steps_first_example)] + [list() for i in range(args.steps_per_example)]
+            all_results = [list() for i in range(args.steps_per_example)]
+            all_losses = [list() for i in range(args.steps_per_example)]
 
         if data_iter_step == args.number_of_example_reinitialize :
             model, optimizer, loss_scaler = _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, args, device)

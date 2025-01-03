@@ -42,6 +42,50 @@ class ExtendedImageFolder(ImageFolderSafe):
 
         return samples, target
 
+class ExtendedImageFolder_online(ImageFolderSafe):
+    def __init__(self, root: str, batch_size: int = 1, initial_steps: int = 250, subsequent_steps: int = 1, minimizer=None, transform: Optional[Callable] = None, single_crop: bool = False, start_index: int = 0):
+        super().__init__(root=root, transform=transform)
+        self.batch_size = batch_size
+        self.minimizer = minimizer
+        self.initial_steps = initial_steps
+        self.subsequent_steps = subsequent_steps
+        self.single_crop = single_crop
+        self.start_index = start_index
+        self.steps_per_example = [self.initial_steps] + [self.subsequent_steps] * (len(self.samples) - 1)
+
+    def __len__(self):
+        # Calculate total length considering varying steps per example
+        if self.minimizer is not None:
+            total_steps = sum(self.steps_per_example[idx] for idx in self.minimizer)
+        else:
+            total_steps = sum(self.steps_per_example)
+        return total_steps * self.batch_size
+
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+        # Determine the actual image index based on the cumulative sum of steps
+        cumulative_steps = 0
+        real_index = 0
+        for steps in self.steps_per_example:
+            cumulative_steps += steps
+            if index < cumulative_steps:
+                break
+            real_index += 1
+
+        if self.minimizer is not None:
+            real_index = self.minimizer[real_index]
+
+        path, target = self.samples[real_index]
+        sample = self.loader(path)
+        if self.transform is not None and not self.single_crop:
+            samples = torch.stack([self.transform(sample) for i in range(self.batch_size)], axis=0)
+        elif self.transform and self.single_crop:
+            s = self.transform(sample)
+            samples = torch.stack([s for i in range(self.batch_size)], axis=0)
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return samples, target
 
 class ExtendedSplitImageFolder(ExtendedImageFolder):
     def __init__(self, root: str, batch_size: int = 1, steps_per_example: int = 1, split: int = 0, minimizer = None, 

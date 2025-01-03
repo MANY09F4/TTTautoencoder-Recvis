@@ -188,7 +188,12 @@ def main(args):
 
     data_path = args.data_path
 
-    dataset_train = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_train, minimizer=None,
+    if args.online_ttt : 
+        dataset_train = tt_image_folder.ExtendedImageFolder_online(data_path, transform=transform_train, minimizer=None,
+                                                        batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,
+                                                        single_crop=args.single_crop, start_index=max_known_file+1)
+    else : 
+        dataset_train = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_train, minimizer=None,
                                                         batch_size=args.batch_size, steps_per_example=args.steps_per_example * args.accum_iter,
                                                         single_crop=args.single_crop, start_index=max_known_file+1)
 
