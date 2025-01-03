@@ -316,7 +316,8 @@ def train_on_test_online(base_model: torch.nn.Module,
 
         #Reinitialize the model to the first step of the last example
         if args.reinitialize_first_last_one : 
-            model = clone_model.load_state_dict(copy.deepcopy(state_dict_model_previous))
+            #model = clone_model
+            model.load_state_dict(copy.deepcopy(state_dict_model_previous))
             if args.optimizer_type == 'sgd':
                 optimizer = torch.optim.SGD(get_prameters_from_args(clone_model, args), lr=args.lr, momentum=args.optimizer_momentum)
             elif args.optimizer_type == 'adam':
