@@ -135,14 +135,13 @@ class ExtendedImageFolder_online(ImageFolderSafe):
 class ExtendedImageFolder_online_shuffle(datasets.ImageFolder):
     def __init__(self, root: str, batch_size: int = 1, initial_steps: int = 250, subsequent_steps: int = 1,
                  shuffle_seed: Optional[int] = None, transform: Optional[Callable] = None,
-                 single_crop: bool = False, start_index: int = 0, print_index: bool = False):
+                 single_crop: bool = False, start_index: int = 0):
         super().__init__(root=root, transform=transform)
         self.batch_size = batch_size
         self.initial_steps = initial_steps
         self.subsequent_steps = subsequent_steps
         self.single_crop = single_crop
         self.start_index = start_index
-        self.print_index = print_index
 
         # Shuffle indices using the provided shuffle seed
         rng = np.random.default_rng(shuffle_seed)
@@ -153,6 +152,12 @@ class ExtendedImageFolder_online_shuffle(datasets.ImageFolder):
 
         # Compute cumulative steps for efficient index mapping
         self.cumulative_steps = np.cumsum(np.array(self.steps_per_example)[self.indices])
+
+    def get_shuffled_indices(self) -> list:
+        """
+        Returns the shuffled indices in the order they will be accessed.
+        """
+        return list(self.indices)
 
     def __len__(self):
         """

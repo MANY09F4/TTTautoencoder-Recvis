@@ -202,6 +202,8 @@ def main(args):
                                                         batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,
                                                         single_crop=args.single_crop, start_index=max_known_file+1, shuffle_seed=args.shuffle_seed, print_index = True)
 
+            shuffled_indices_train = dataset_train.get_shuffled_indices()
+
             dataset_val = tt_image_folder.ExtendedImageFolder_online_shuffle(
                 data_path,
                 transform=transform_val,
@@ -212,6 +214,9 @@ def main(args):
                 start_index=max_known_file + 1,
                 shuffle_seed=args.shuffle_seed, print_index = True  # Utilise la même seed pour correspondre à l'ordre des indices
             )
+
+            shuffled_indices_val = dataset_val.get_shuffled_indices()
+
         else :
             dataset_train = tt_image_folder.ExtendedImageFolder_online(data_path, transform=transform_train, minimizer=None,
                                                         batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,
