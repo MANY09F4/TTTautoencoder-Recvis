@@ -135,13 +135,14 @@ class ExtendedImageFolder_online(ImageFolderSafe):
 class ExtendedImageFolder_online_shuffle(datasets.ImageFolder):
     def __init__(self, root: str, batch_size: int = 1, initial_steps: int = 250, subsequent_steps: int = 1,
                  shuffle_seed: Optional[int] = None, transform: Optional[Callable] = None,
-                 single_crop: bool = False, start_index: int = 0):
+                 single_crop: bool = False, start_index: int = 0, print_index: bool = False):
         super().__init__(root=root, transform=transform)
         self.batch_size = batch_size
         self.initial_steps = initial_steps
         self.subsequent_steps = subsequent_steps
         self.single_crop = single_crop
         self.start_index = start_index
+        self.print_index = print_index
 
         # Shuffle indices using the provided shuffle seed
         rng = np.random.default_rng(shuffle_seed)
@@ -173,8 +174,9 @@ class ExtendedImageFolder_online_shuffle(datasets.ImageFolder):
         real_index = np.searchsorted(self.cumulative_steps, index // self.batch_size, side="right")
         shuffled_real_index = self.indices[real_index]
 
-        if index % self.batch_size == 0:  # Print only for the first item in the batch
-            print(f"Batch {index // self.batch_size}: Original index = {shuffled_real_index}")
+        if self.print_index:
+            if index % self.batch_size == 0:  # Print only for the first item in the batch
+                print(f"Batch {index // self.batch_size}: Original index = {shuffled_real_index}")
 
 
         # Load the image and target
