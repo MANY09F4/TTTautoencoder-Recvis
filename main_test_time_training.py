@@ -196,7 +196,7 @@ def main(args):
         if args.shuffle :
             dataset_train = tt_image_folder.ExtendedImageFolder_online_shuffle(data_path, transform=transform_train,
                                                         batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,
-                                                        single_crop=args.single_crop, start_index=max_known_file+1)
+                                                        single_crop=args.single_crop, start_index=max_known_file+1, shuffle_seed=np.random.randint(0, 10000))
         else :
             dataset_train = tt_image_folder.ExtendedImageFolder_online(data_path, transform=transform_train, minimizer=None,
                                                         batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,
