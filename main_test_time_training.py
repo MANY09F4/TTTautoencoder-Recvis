@@ -201,18 +201,33 @@ def main(args):
             dataset_train = tt_image_folder.ExtendedImageFolder_online_shuffle(data_path, transform=transform_train,
                                                         batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,
                                                         single_crop=args.single_crop, start_index=max_known_file+1, shuffle_seed=args.shuffle_seed)
+
+            dataset_val = tt_image_folder.ExtendedImageFolder_online_shuffle(
+                data_path,
+                transform=transform_val,
+                batch_size=1,  # Evaluation image par image
+                initial_steps=1,  # Un seul pas par image pour la validation
+                subsequent_steps=1,
+                single_crop=args.single_crop,
+                start_index=max_known_file + 1,
+                shuffle_seed=args.shuffle_seed  # Utilise la même seed pour correspondre à l'ordre des indices
+            )
         else :
             dataset_train = tt_image_folder.ExtendedImageFolder_online(data_path, transform=transform_train, minimizer=None,
                                                         batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,
                                                         single_crop=args.single_crop, start_index=max_known_file+1)
+
+            dataset_val = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_val,
+                                                            batch_size=1, minimizer=None,
+                                                            single_crop=args.single_crop, start_index=max_known_file+1)
     else :
         dataset_train = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_train, minimizer=None,
                                                         batch_size=args.batch_size, steps_per_example=args.steps_per_example * args.accum_iter,
                                                         single_crop=args.single_crop, start_index=max_known_file+1)
 
-    dataset_val = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_val,
-                                                        batch_size=1, minimizer=None,
-                                                        single_crop=args.single_crop, start_index=max_known_file+1)
+        dataset_val = tt_image_folder.ExtendedImageFolder(data_path, transform=transform_val,
+                                                            batch_size=1, minimizer=None,
+                                                            single_crop=args.single_crop, start_index=max_known_file+1)
 
     num_classes = 1000
 
