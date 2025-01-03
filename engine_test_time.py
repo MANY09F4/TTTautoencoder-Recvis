@@ -333,7 +333,7 @@ def train_on_test_online(base_model: torch.nn.Module,
                     print(f'datapoint {data_iter_step} iter {step_per_example}: rec_loss {loss_value}')
                 if data_iter_step == iter_start and num_steps_per_example - step_per_example < args.steps_per_example :
                     all_losses[(args.steps_per_example - (num_steps_per_example - step_per_example)) // accum_iter].append(loss_value/accum_iter)
-                else :
+                else : 
                     all_losses[step_per_example // accum_iter].append(loss_value/accum_iter)
                 optimizer.zero_grad()
 
