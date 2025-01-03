@@ -174,10 +174,9 @@ class ExtendedImageFolder_online_shuffle(datasets.ImageFolder):
         real_index = np.searchsorted(self.cumulative_steps, index // self.batch_size, side="right")
         shuffled_real_index = self.indices[real_index]
 
-        if self.print_index:
-            if index % self.batch_size == 0:  # Print only for the first item in the batch
-                print(f"Batch {index // self.batch_size}: Original index = {shuffled_real_index}")
-
+        # Optionally print the original index
+        if self.print_index and index % self.batch_size == 0:
+            print(f"Datapoint {index // self.batch_size}: Shuffled index = {real_index}, Original index = {shuffled_real_index}")
 
         # Load the image and target
         path, target = self.samples[shuffled_real_index]
