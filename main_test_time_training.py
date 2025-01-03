@@ -74,6 +74,7 @@ def get_args_parser():
     parser.add_argument('--optimizer_type', default='sgd', help='adam, adam_w, sgd.')
     parser.add_argument('--optimizer_momentum', default=0.9, type=float, help='adam, adam_w, sgd.')
     parser.add_argument('--seed', default=0, type=int)
+    parser.add_argument('--shuffle_seed', default=0, type=int)
     parser.add_argument('--resume_model', default='', required=True, help='resume from checkpoint')
     parser.add_argument('--resume_finetune', default='', required=True, help='resume from checkpoint')
     parser.add_argument('--num_workers', default=10, type=int)
@@ -194,9 +195,12 @@ def main(args):
 
     if args.online_ttt :
         if args.shuffle :
+            print(f"Shuffling dataset with seed: {args.shuffle_seed}")
+            with open(os.path.join(args.output_dir, 'shuffling_seed.txt'), 'w') as f:
+                f.write(f"shuffle_seed: {args.shuffle_seed}\n")
             dataset_train = tt_image_folder.ExtendedImageFolder_online_shuffle(data_path, transform=transform_train,
                                                         batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,
-                                                        single_crop=args.single_crop, start_index=max_known_file+1, shuffle_seed=np.random.randint(0, 10000))
+                                                        single_crop=args.single_crop, start_index=max_known_file+1, shuffle_seed=args.shuffle_seed)
         else :
             dataset_train = tt_image_folder.ExtendedImageFolder_online(data_path, transform=transform_train, minimizer=None,
                                                         batch_size=args.batch_size, initial_steps = args.steps_first_example * args.accum_iter,subsequent_steps = args.steps_per_example,

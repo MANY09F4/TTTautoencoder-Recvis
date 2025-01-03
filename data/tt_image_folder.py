@@ -134,7 +134,8 @@ class ExtendedImageFolder_online(ImageFolderSafe):
 
 class ExtendedImageFolder_online_shuffle(datasets.ImageFolder):
     def __init__(self, root: str, batch_size: int = 1, initial_steps: int = 250, subsequent_steps: int = 1,
-                 shuffle_seed=None, transform: Optional[Callable] = None, single_crop: bool = False, start_index: int = 0):
+                 shuffle_seed: Optional[int] = None, transform: Optional[Callable] = None,
+                 single_crop: bool = False, start_index: int = 0):
         super().__init__(root=root, transform=transform)
         self.batch_size = batch_size
         self.initial_steps = initial_steps
@@ -142,7 +143,7 @@ class ExtendedImageFolder_online_shuffle(datasets.ImageFolder):
         self.single_crop = single_crop
         self.start_index = start_index
 
-        # Shuffle indices
+        # Shuffle indices using the provided shuffle seed
         rng = np.random.default_rng(shuffle_seed)
         self.indices = rng.permutation(len(self.samples))
 
@@ -153,18 +154,30 @@ class ExtendedImageFolder_online_shuffle(datasets.ImageFolder):
         self.cumulative_steps = np.cumsum(np.array(self.steps_per_example)[self.indices])
 
     def __len__(self):
-        # Total number of steps (considering shuffled indices)
-        total_steps = self.cumulative_steps[-1]
-        return total_steps * self.batch_size
+        """
+        Total number of steps across all shuffled indices.
+        """
+        return self.cumulative_steps[-1] * self.batch_size
 
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
-        # Find the shuffled index corresponding to the requested step
-        real_index = np.searchsorted(self.cumulative_steps, index, side="right")
+        """
+        Get the sample and target corresponding to the given step index.
+
+        Args:
+            index (int): The global index for the dataset, considering steps.
+
+        Returns:
+            Tuple[Any, Any]: Transformed sample and its target class.
+        """
+        # Find the index of the cumulative step
+        real_index = np.searchsorted(self.cumulative_steps, index // self.batch_size, side="right")
         shuffled_real_index = self.indices[real_index]
 
-        # Load the image and transform it
+        # Load the image and target
         path, target = self.samples[shuffled_real_index]
         sample = self.loader(path)
+
+        # Apply transformations
         if self.transform is not None and not self.single_crop:
             samples = torch.stack([self.transform(sample) for _ in range(self.batch_size)], axis=0)
         elif self.transform and self.single_crop:
