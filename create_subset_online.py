@@ -2,50 +2,57 @@ import os
 import random
 import shutil
 
-def create_random_imagenet_c_subset(base_dir, output_dir, num_images_per_level=500, num_corruptions=10):
+def create_imagenet_c_subset(base_dir, output_dir, num_images=500):
     """
-    Create a reduced subset of ImageNet-C with a fixed number of random images per corruption level,
-    limited to a subset of corruption types.
+    Create a subset of ImageNet-C with the same selected images across all corruption types and severity levels.
     """
-    random.seed(42)  # Ensure reproducibility
+    random.seed(23)  # Fix the seed for reproducibility
 
-    # Ensure output directory exists
+    # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
-    # List all corruption types (folders in the base directory)
-    all_corruptions = [d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d))]
-    selected_corruptions = random.sample(all_corruptions, num_corruptions)  # Pick 10 corruption types
+    # List all corruption types
+    corruptions = [d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d))]
 
-    print(f"Selected corruptions: {selected_corruptions}")
+    # Reference: the first corruption and severity to choose the 500 images
+    first_corruption = corruptions[0]
+    first_severity_dir = os.path.join(base_dir, first_corruption, "1")  # Use severity level 1
+    all_files = []
 
-    # Process each corruption type
-    for corruption in selected_corruptions:
-        for severity_level in range(1, 6):  # Severity levels 1 to 5
-            input_dir = os.path.join(base_dir, corruption, str(severity_level))
-            output_dir_level = os.path.join(output_dir, corruption, str(severity_level))
-            os.makedirs(output_dir_level, exist_ok=True)
+    # Collect all images from all classes in the first corruption/severity
+    for cls in os.listdir(first_severity_dir):
+        class_dir = os.path.join(first_severity_dir, cls)
+        if os.path.isdir(class_dir):
+            files = [os.path.join(cls, img) for img in os.listdir(class_dir) if img.endswith(('.JPEG', '.jpg', '.png'))]
+            all_files.extend(files)
 
-            # Collect all images across all classes
-            all_images = []
-            for cls in os.listdir(input_dir):
-                class_dir = os.path.join(input_dir, cls)
-                if os.path.isdir(class_dir):
-                    all_images += [os.path.join(class_dir, img) for img in os.listdir(class_dir)]
+    # Randomly select 500 images
+    selected_files = random.sample(all_files, min(len(all_files), num_images))
 
-            # Randomly sample 500 images
-            sampled_images = random.sample(all_images, min(len(all_images), num_images_per_level))
+    # Copy the same selected images for each corruption and severity level
+    for corruption in corruptions:
+        for severity in range(1, 6):  # Severity levels 1 to 5
+            corruption_dir = os.path.join(base_dir, corruption, str(severity))
+            output_corruption_dir = os.path.join(output_dir, corruption, str(severity))
+            os.makedirs(output_corruption_dir, exist_ok=True)
 
-            # Copy sampled images to the output directory
-            for src in sampled_images:
-                # Preserve class directory structure in the output
-                relative_path = os.path.relpath(src, input_dir)
-                dst = os.path.join(output_dir_level, relative_path)
-                os.makedirs(os.path.dirname(dst), exist_ok=True)
-                shutil.copy(src, dst)
+            for selected_file in selected_files:
+                cls, filename = os.path.split(selected_file)  # Extract class and filename
+                src = os.path.join(corruption_dir, cls, filename)
+                dest_dir = os.path.join(output_corruption_dir, cls)
+                os.makedirs(dest_dir, exist_ok=True)
+                dest = os.path.join(dest_dir, filename)
 
-    print(f"Random subset created at: {output_dir}")
+                # Copy the file if it exists
+                if os.path.exists(src):
+                    shutil.copy(src, dest)
+
+    print(f"Subset created at: {output_dir} with {num_images} images per corruption level.")
+
 
 if __name__ == "__main__":
-    base_dir = "/home/toniomirri/datasets/Imagenet-C"  # Path to ImageNet-C
-    output_dir = "/home/toniomirri/datasets/Imagenet-C-subset-online"  # Output directory for the subset
-    create_random_imagenet_c_subset(base_dir, output_dir, num_images_per_level=500, num_corruptions=10)
+    base_dir = "/home/toniomirri/datasets/Imagenet-C"  # Path to the original ImageNet-C dataset
+    output_dir = "/home/toniomirri/datasets/Imagenet-C-Reduced-500"  # Path to save the reduced dataset
+    num_images = 500  # Total number of images to select
+
+    create_imagenet_c_subset(base_dir, output_dir, num_images)
