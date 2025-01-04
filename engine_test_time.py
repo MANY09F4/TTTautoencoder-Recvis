@@ -282,7 +282,7 @@ def train_on_test_online(base_model: torch.nn.Module,
 
 
     model, optimizer, loss_scaler = _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, args, device)
-    if args.reinitialize_first_last_one : 
+    if args.reinitialize_first_last_one :
         state_dict_model_previous = model.state_dict()
         state_dict_optimizer_previous = optimizer.state_dict()
 
@@ -315,7 +315,7 @@ def train_on_test_online(base_model: torch.nn.Module,
                 num_steps_per_example = args.steps_per_example
 
         #Reinitialize the model to the first step of the last example
-        if args.reinitialize_first_last_one : 
+        if args.reinitialize_first_last_one :
             #model = clone_model
             model.load_state_dict(copy.deepcopy(state_dict_model_previous))
             if args.optimizer_type == 'sgd':
@@ -381,7 +381,7 @@ def train_on_test_online(base_model: torch.nn.Module,
                     model.train()
 
             if args.reinitialize_first_last_one and step_per_example == 0 :
-                state_dict_model_previous = model.state_dict() 
+                state_dict_model_previous = model.state_dict()
                 state_dict_optimizer_previous = optimizer.state_dict()
 
             if (args.print_images) and data_iter_step == iter_start :
@@ -437,18 +437,37 @@ def train_on_test_online(base_model: torch.nn.Module,
     return
 
 
+
+
 def save_accuracy_results(args):
-    # if args.online_ttt :
-    #     num_steps_per_examples = args.steps_first_example +
+    # Initialisation des résultats pour chaque étape
     all_all_results = [list() for i in range(args.steps_per_example)]
-    for file_number, f_name in enumerate(glob.glob(os.path.join(args.output_dir, 'results_*.npy'))):
+
+    # Calcul dynamique du nombre d'images
+    # On récupère les fichiers .npy présents dans le dossier des résultats
+    result_files = glob.glob(os.path.join(args.output_dir, 'results_*.npy'))
+    if len(result_files) > 0:
+        # Charger un des fichiers pour déterminer le nombre d'images
+        sample_data = np.load(result_files[0])
+        num_images = len(sample_data[0]) * len(result_files)
+    else:
+        raise ValueError(f"Aucun fichier 'results_*.npy' trouvé dans {args.output_dir}")
+
+    print(f"Nombre total d'images calculé : {num_images}")
+
+    # Chargement des fichiers de résultats
+    for file_number, f_name in enumerate(result_files):
         all_data = np.load(f_name)
         for step in range(args.steps_per_example):
             all_all_results[step] += all_data[step].tolist()
+
+    # Indiquer que le modèle est finalisé
     with open(os.path.join(args.output_dir, 'model-final.pth'), 'w') as f:
         f.write(f'Done!\n')
+
+    # Sauvegarde des résultats d'accuracy
     with open(os.path.join(args.output_dir, 'accuracy.txt'), 'a') as f:
         f.write(f'{str(args)}\n')
         for i in range(args.steps_per_example):
-            assert len(all_all_results[i]) == 5000, len(all_all_results[i])
+            assert len(all_all_results[i]) == num_images, f"Expected {num_images}, but got {len(all_all_results[i])}"
             f.write(f'{i}\t{np.mean(all_all_results[i])}\n')
