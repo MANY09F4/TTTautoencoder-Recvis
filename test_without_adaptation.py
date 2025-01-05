@@ -67,6 +67,9 @@ def main(args):
     dataset_val = tt_image_folder.ExtendedImageFolder(args.data_path, transform=transform_val,
                                                             batch_size=1, minimizer=None,
                                                              start_index=0)
+
+    val_loader = iter(torch.utils.data.DataLoader(dataset_val, batch_size=1, shuffle=False, num_workers=args.num_workers))
+
     classes = 1000
 
 
@@ -80,7 +83,8 @@ def main(args):
     for index in range(data_len):
         # Get the samples:
         current_idx = index
-        samples, labels = dataset_val[current_idx]
+        #samples, labels = dataset_val[current_idx]
+        samples, labels = next(val_loader)
         samples = samples.to(args.device, non_blocking=True).unsqueeze(0)
         labels = torch.LongTensor([labels]).to(args.device, non_blocking=True)
         with torch.no_grad():
