@@ -17,6 +17,7 @@ from engine_pretrain import accuracy
 from einops import repeat
 import tqdm
 import os.path
+from data import tt_image_folder
 
 def get_args_parser():
     parser = argparse.ArgumentParser('MAE testing.', add_help=False)
@@ -52,7 +53,7 @@ def get_args_parser():
     parser.add_argument('--head_type', default='linear',
                         help='Head type - linear or vit_head')
     parser.add_argument('--num_workers', default=10, type=int)
-    
+
     return parser
 
 
@@ -62,11 +63,14 @@ def main(args):
         transforms.CenterCrop(args.input_size),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-    dataset_val = datasets.ImageFolder(args.data_path, transform=transform_val)
+    #dataset_val = datasets.ImageFolder(args.data_path, transform=transform_val)
+    dataset_val = tt_image_folder.ExtendedImageFolder(args.data_path, transform=transform_val,
+                                                            batch_size=1, minimizer=None,
+                                                            single_crop=args.single_crop, start_index=0)
     classes = 1000
 
-    
-    print(f'Using dataset {args.data_path} with {len(dataset_val)}') 
+
+    print(f'Using dataset {args.data_path} with {len(dataset_val)}')
     model, _, _ = load_combined_model(args, classes)
     _ = model.to(args.device)
     all_acc = []
@@ -93,8 +97,8 @@ def main(args):
         f.write(f'{np.mean(all_acc)} {np.mean(all_losses)}\n')
     with open(os.path.join(args.output_dir, 'accuracy.npy'), 'wb') as f:
         np.save(f, np.array(all_acc))
-        
-    
+
+
 if __name__ == '__main__':
     args = get_args_parser()
     args = args.parse_args()
