@@ -30,8 +30,7 @@ def create_online_subfolders(base_dir, levels_to_merge=[1, 3, 5]):
 
             for class_name in ordered_cls:
                 class_source_path = os.path.join(level_path, class_name)
-                class_name_online_level = class_name
-                class_name_online_level[1] = level
+                class_name_online_level = class_name[:1] + f'{level}' + class_name[2:]
                 class_target_path = os.path.join(online_path, class_name_online_level)
                 os.makedirs(class_target_path, exist_ok=True)
 
