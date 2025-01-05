@@ -430,8 +430,8 @@ def train_on_test_online(base_model: torch.nn.Module,
     save_accuracy_results(args)
 
     if args.save_mae_online : 
-        torch.save(model.state_dict(),'/home/toniomirri/checkpoints/latest_online_weights.pth')
-        
+        torch.save({'model' : model.state_dict()},'/home/toniomirri/checkpoints/latest_online_weights.pth')
+
     # gather the stats from all processes
     try:
         print("Averaged stats:", metric_logger)
