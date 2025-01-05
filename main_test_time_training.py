@@ -112,6 +112,8 @@ def get_args_parser():
     parser.set_defaults(reinitialize_first_last_one=False)
     parser.add_argument('--shuffle', action='store_true',help='Shuffle the dataset for the online version.')
     parser.set_defaults(shuffle=False)
+    parser.add_argument('--save_mae_online',action='store_true',help='save the weights of the mae after test training')
+    parser.set_defaults(save_mae_online=False)
 
 
     return parser
