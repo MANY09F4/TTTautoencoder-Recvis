@@ -66,7 +66,7 @@ def main(args):
     #dataset_val = datasets.ImageFolder(args.data_path, transform=transform_val)
     dataset_val = tt_image_folder.ExtendedImageFolder(args.data_path, transform=transform_val,
                                                             batch_size=1, minimizer=None,
-                                                            single_crop=args.single_crop, start_index=0)
+                                                             start_index=0)
     classes = 1000
 
 
