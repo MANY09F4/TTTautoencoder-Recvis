@@ -388,7 +388,7 @@ def train_on_test_online(base_model: torch.nn.Module,
                 # state_dict_model_previous = model.state_dict()
                 # state_dict_optimizer_previous = optimizer.state_dict()
 
-            if (args.print_images) and data_iter_step == iter_start :
+            if (args.print_images) and data_iter_step % 10 == 0 :
 
                 if (step_per_example in indices_to_show) :
 
