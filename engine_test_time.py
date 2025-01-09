@@ -428,8 +428,9 @@ def train_on_test_online(base_model: torch.nn.Module,
             all_results = [list() for i in range(args.steps_per_example)]
             all_losses = [list() for i in range(args.steps_per_example)]
 
-        # if data_iter_step % args.number_of_example_reinitialize == 0 :
-        #     model, optimizer, loss_scaler = _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, args, device)
+        if data_iter_step % (args.number_of_example_reinitialize - 1) == 0 :
+            print(f"Reinitializing model after {args.number_of_example_reinitialize} examples...")
+            model, optimizer, loss_scaler = _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, args, device)
 
     save_accuracy_results(args)
 
