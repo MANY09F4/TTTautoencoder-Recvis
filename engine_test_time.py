@@ -285,7 +285,7 @@ def train_on_test_online(base_model: torch.nn.Module,
     if args.reinitialize_first_last_one :
         # state_dict_model_previous = model.state_dict()
         # state_dict_optimizer_previous = optimizer.state_dict()
-        torch.save({'model' : model.state_dict()},'/home/toniomirri/checkpoints/latest_online_weights.pth')
+        torch.save({'model' : model.state_dict()},'/home/toniomirri/checkpoints/last_online_weights.pth')
 
     if log_writer is not None:
         print('log_dir: {}'.format(log_writer.log_dir))
