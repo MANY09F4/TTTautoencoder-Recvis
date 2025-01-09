@@ -283,8 +283,9 @@ def train_on_test_online(base_model: torch.nn.Module,
 
     model, optimizer, loss_scaler = _reinitialize_model(base_model, base_optimizer, base_scalar, clone_model, args, device)
     if args.reinitialize_first_last_one :
-        state_dict_model_previous = model.state_dict()
-        state_dict_optimizer_previous = optimizer.state_dict()
+        # state_dict_model_previous = model.state_dict()
+        # state_dict_optimizer_previous = optimizer.state_dict()
+        torch.save({'model' : model.state_dict()},'/home/toniomirri/checkpoints/latest_online_weights.pth')
 
     if log_writer is not None:
         print('log_dir: {}'.format(log_writer.log_dir))
@@ -317,15 +318,17 @@ def train_on_test_online(base_model: torch.nn.Module,
         #Reinitialize the model to the first step of the last example
         if args.reinitialize_first_last_one :
             #model = clone_model
-            model.load_state_dict(copy.deepcopy(state_dict_model_previous))
-            if args.optimizer_type == 'sgd':
-                optimizer = torch.optim.SGD(get_prameters_from_args(clone_model, args), lr=args.lr, momentum=args.optimizer_momentum)
-            elif args.optimizer_type == 'adam':
-                optimizer = torch.optim.Adam(get_prameters_from_args(clone_model, args), lr=args.lr, betas=(0.9, 0.95))
-            else:
-                assert args.optimizer_type == 'adam_w'
-                optimizer = torch.optim.AdamW(get_prameters_from_args(clone_model, args), lr=args.lr, betas=(0.9, 0.95))
-            optimizer.load_state_dict(state_dict_optimizer_previous)
+            model_checkpoint = torch.load('/home/toniomirri/checkpoints/last_online_weights.pth', map_location='cpu')
+            model.load_state_dict(model_checkpoint['model'])
+            # model.load_state_dict(copy.deepcopy(state_dict_model_previous))
+            # if args.optimizer_type == 'sgd':
+            #     optimizer = torch.optim.SGD(get_prameters_from_args(clone_model, args), lr=args.lr, momentum=args.optimizer_momentum)
+            # elif args.optimizer_type == 'adam':
+            #     optimizer = torch.optim.Adam(get_prameters_from_args(clone_model, args), lr=args.lr, betas=(0.9, 0.95))
+            # else:
+            #     assert args.optimizer_type == 'adam_w'
+            #     optimizer = torch.optim.AdamW(get_prameters_from_args(clone_model, args), lr=args.lr, betas=(0.9, 0.95))
+            # optimizer.load_state_dict(state_dict_optimizer_previous)
             optimizer.zero_grad()
 
         # Test time training:
@@ -381,8 +384,9 @@ def train_on_test_online(base_model: torch.nn.Module,
                     model.train()
 
             if args.reinitialize_first_last_one and step_per_example == 0 :
-                state_dict_model_previous = model.state_dict()
-                state_dict_optimizer_previous = optimizer.state_dict()
+                torch.save({'model' : model.state_dict()},'/home/toniomirri/checkpoints/last_online_weights.pth')
+                # state_dict_model_previous = model.state_dict()
+                # state_dict_optimizer_previous = optimizer.state_dict()
 
             if (args.print_images) and data_iter_step == iter_start :
 
