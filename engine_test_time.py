@@ -194,7 +194,7 @@ def train_on_test(base_model: torch.nn.Module,
                     all_results[step_per_example // accum_iter].append(acc1)
                     model.train()
 
-            if (args.print_images) :
+            if (args.print_images) and data_iter_step % 10 == 0 :
 
                 if (step_per_example in indices_to_show) :
 
